@@ -40,7 +40,7 @@ const AST = (() => {
   /** Client ID dell'app MAL dello sviluppatore, usato se l'utente non ne inserisce uno proprio.
    * Accesso PKCE (client pubblico): il Client ID non è un segreto. Da compilare prima della
    * pubblicazione; vuoto = ogni utente deve registrare la propria app su MAL. */
-  const BUILTIN_CLIENT_ID = '';
+  const BUILTIN_CLIENT_ID = 'c44c0f0ed991504765925e8028cb836a';
 
   const DEFAULT_SETTINGS = Object.freeze({
     scrobble: true,       // auto-scrobble su MAL
