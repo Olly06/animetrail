@@ -1,0 +1,30 @@
+{
+  "categories": {
+    "firefox": ["games-entertainment"],
+    "android": ["games-entertainment"]
+  },
+  "summary": {
+    "it": "Traccia gli episodi di anime che guardi su AnimeSaturn, AnimeWorld e AnimeUnity e aggiorna la tua lista MyAnimeList.",
+    "en-US": "Tracks the anime episodes you watch on AnimeSaturn, AnimeWorld and AnimeUnity and updates your MyAnimeList."
+  },
+  "description": {
+    "it": "AnimeTrail ricorda a che punto sei con ogni anime e tiene aggiornata la tua lista MyAnimeList.\n\nCosa fa:\n• Segna automaticamente gli episodi visti dopo il tempo che scegli.\n• Mostra \"Continua\" per riprendere dall'ultimo episodio e marca gli episodi già visti nelle liste.\n• Sincronizza la tua lista tra i dispositivi tramite Firefox Sync.\n• Aggiorna MyAnimeList (episodi visti, stato watching/completed) con il login ufficiale MAL, opzionale.\n• Importa da MAL gli anime già completati.\n• Esporta e importa un backup dei tuoi dati.\n• Indica con AS / AW / AU su quale sito stavi guardando e permette di scegliere il sito preferito per la ricerca.\n\nPrivacy: nessun server dello sviluppatore, nessuna telemetria né pubblicità. I dati restano nel tuo browser (e nella sincronizzazione del browser); l'unico servizio esterno contattato è MyAnimeList, solo se fai il login.\n\nProgetto indipendente, non affiliato a MyAnimeList né ai siti supportati. Codice open source (MIT).",
+    "en-US": "AnimeTrail remembers where you are in every anime and keeps your MyAnimeList up to date.\n\nFeatures:\n• Automatically marks episodes as watched after a delay you choose.\n• \"Continue\" button to resume from the last episode, and watched episodes are highlighted in episode lists.\n• Syncs your list across devices through Firefox Sync.\n• Updates MyAnimeList (watched episodes, watching/completed status) with the official MAL login, optional.\n• Imports your completed anime from MAL.\n• Export and import a backup of your data.\n• Shows AS / AW / AU badges for the site you watched on, with a preferred search site setting.\n\nPrivacy: no developer servers, no telemetry or ads. Your data stays in your browser (and your browser's sync); the only external service contacted is MyAnimeList, and only if you log in.\n\nIndependent project, not affiliated with MyAnimeList or the supported sites. Open source (MIT)."
+  },
+  "homepage": {
+    "en-US": "https://github.com/Olly06/animetrail"
+  },
+  "support_url": {
+    "en-US": "https://github.com/Olly06/animetrail/issues"
+  },
+  "is_experimental": false,
+  "requires_payment": false,
+  "version": {
+    "license": "MIT",
+    "release_notes": {
+      "it": "Supporto ad AnimeWorld e AnimeUnity, etichette del sito, sito di ricerca preferito, nuovo nome e logo, login MAL semplificato.",
+      "en-US": "AnimeWorld and AnimeUnity support, site badges, preferred search site, new name and logo, simplified MAL login."
+    },
+    "approval_notes": "The extension has no backend. All data is kept in browser.storage (sync/local). Network requests: (1) pages of the supported anime sites to read metadata, (2) MyAnimeList OAuth2 PKCE login and API, only if the user logs in. MAL login is optional; to test it, use any MyAnimeList account and press 'Login con MAL' in the Settings tab. Source is not minified or bundled: the uploaded package is the repository's src/ folder (https://github.com/Olly06/animetrail). Privacy policy: https://github.com/Olly06/animetrail/blob/main/PRIVACY.md"
+  }
+}
