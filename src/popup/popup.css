@@ -395,3 +395,6 @@ select.num { width: auto; text-align: left; color: inherit; }
 
 /* Gli elementi con attributo hidden devono restare nascosti anche se il CSS imposta display. */
 [hidden] { display: none !important; }
+
+#mal-advanced { margin: 6px 0 10px; }
+#mal-advanced summary { cursor: pointer; margin-bottom: 8px; }

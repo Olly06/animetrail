@@ -293,6 +293,11 @@ function renderSettings() {
   const { settings, auth, redirectUrl } = state;
   const clientInput = $('#client-id');
   if (document.activeElement !== clientInput) clientInput.value = settings.clientId || '';
+  const adv = $('#mal-advanced');
+  if (!adv.dataset.init) {
+    adv.dataset.init = '1';
+    adv.open = !AST.BUILTIN_CLIENT_ID || !!settings.clientId; // senza Client ID integrato il campo serve subito
+  }
   $('#redirect-url').value = redirectUrl;
   $('#scrobble-toggle').checked = !!settings.scrobble;
   $('#search-site').value = AST.SEARCH_SITE_NAMES[settings.searchSite] ? settings.searchSite : 'saturn';
@@ -385,7 +390,7 @@ function bindEvents() {
 
   $('#login-btn').addEventListener('click', async () => {
     const clientId = $('#client-id').value.trim();
-    if (!clientId) return toast('Inserisci il Client ID della tua app MAL', true);
+    if (!clientId && !AST.BUILTIN_CLIENT_ID) return toast('Inserisci il Client ID della tua app MAL', true);
     const btn = $('#login-btn');
     btn.disabled = true;
     btn.textContent = 'Attendo MAL…';

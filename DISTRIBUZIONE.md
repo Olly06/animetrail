@@ -72,3 +72,15 @@ usando le chiavi API salvate nei **Secrets** del repository (`AMO_JWT_ISSUER`, `
   la propria chiave: prima di caricare lo ZIP va rimosso il campo `key` dal manifest e va registrato su MAL
   il nuovo redirect URL `https://<id-store>.chromiumapp.org/`.
 - I file `.crx` installati fuori dallo store sono bloccati da Chrome su Windows e macOS.
+
+## Pubblicazione sullo store AMO (listed)
+
+1. **Client ID MAL integrato** (consigliato): registra un'app su <https://myanimelist.net/apiconfig>
+   (tipo *Other*) e metti il suo Client ID in `BUILTIN_CLIENT_ID` in `src/lib/common.js`.
+   Come Redirect URL registra quello mostrato nelle Impostazioni dell'estensione (dipende dall'ID dell'add-on,
+   quindi è uguale per tutti gli utenti). Senza questo valore ogni utente deve creare la propria app MAL.
+2. **Privacy policy**: usa `PRIVACY.md` (link: `https://github.com/Olly06/animetrail/blob/main/PRIVACY.md`).
+3. **Invio**: dal pannello sviluppatori AMO scegli *On this site*, oppure `npx web-ext sign --channel=listed`.
+   Carica `web-ext-artifacts/animetrail-<versione>-firefox.zip`, aggiungi descrizione, categoria e 2-3 screenshot.
+4. **Note per il revisore**: indica che l'estensione non ha server propri, che il login MAL è opzionale
+   e fornisci istruzioni o un account di prova.

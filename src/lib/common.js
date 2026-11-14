@@ -37,6 +37,11 @@ const AST = (() => {
   const SETTINGS_KEY = 'settings';
   const COVER_HOST = 'https://img.saturncdn.net';
 
+  /** Client ID dell'app MAL dello sviluppatore, usato se l'utente non ne inserisce uno proprio.
+   * Accesso PKCE (client pubblico): il Client ID non è un segreto. Da compilare prima della
+   * pubblicazione; vuoto = ogni utente deve registrare la propria app su MAL. */
+  const BUILTIN_CLIENT_ID = '';
+
   const DEFAULT_SETTINGS = Object.freeze({
     scrobble: true,       // auto-scrobble su MAL
     minWatchSec: 20,      // secondi di permanenza sulla pagina prima di contare l'episodio
@@ -158,6 +163,9 @@ const AST = (() => {
     return /^https:\/\//.test(c) ? c : '';
   }
 
+  /** Client ID personale se impostato, altrimenti quello integrato. */
+  const effectiveClientId = (settings) => String((settings && settings.clientId) || BUILTIN_CLIENT_ID).trim();
+
   async function getSettings() {
     const { [SETTINGS_KEY]: s } = await browser.storage.sync.get(SETTINGS_KEY);
     return { ...DEFAULT_SETTINGS, ...(s || {}) };
@@ -167,6 +175,8 @@ const AST = (() => {
     ENTRY_PREFIX,
     SETTINGS_KEY,
     DEFAULT_SETTINGS,
+    BUILTIN_CLIENT_ID,
+    effectiveClientId,
     encodeRanges,
     decodeRanges,
     maxWatched,

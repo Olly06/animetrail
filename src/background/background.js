@@ -16,7 +16,7 @@ const MAX_SYNC_ENTRIES = 450;  // Firefox: max 512 chiavi in storage.sync
 const META_CACHE_MAX = 300;
 const RETRY_ALARM = 'mal-retry';
 
-MalApi.setClientIdProvider(async () => (await AST.getSettings()).clientId);
+MalApi.setClientIdProvider(async () => AST.effectiveClientId(await AST.getSettings()));
 
 /* ------------------------------------------------------------ serializzazione
  * Tutte le read-modify-write passano da qui per evitare race condition
@@ -590,8 +590,9 @@ const handlers = {
   },
 
   async login(msg) {
-    const clientId = String(msg.clientId || (await AST.getSettings()).clientId || '').trim();
-    await setSettings({ clientId });
+    const custom = String(msg.clientId || '').trim();
+    const clientId = custom || AST.effectiveClientId(await AST.getSettings());
+    if (custom) await setSettings({ clientId: custom });
     await MalApi.login(clientId);
     try {
       const u = await MalApi.getUser();
