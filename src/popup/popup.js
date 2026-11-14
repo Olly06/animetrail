@@ -448,7 +448,7 @@ function bindEvents() {
       const data = await send('exportData');
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = el('a', { href: url, download: `animesaturn-tracker-${new Date().toISOString().slice(0, 10)}.json` });
+      const a = el('a', { href: url, download: `animetrail-${new Date().toISOString().slice(0, 10)}.json` });
       document.body.append(a);
       a.click();
       a.remove();

@@ -1,6 +1,6 @@
-# AnimeSaturn Tracker
+# AnimeTrail
 
-Estensione per **Firefox e Chrome/Chromium** (Manifest V3) che traccia gli episodi visti su AnimeSaturn e AnimeWorld, li sincronizza tra i tuoi dispositivi e aggiorna la lista MyAnimeList (API v2, OAuth2 PKCE).
+Estensione per **Firefox e Chrome/Chromium** (Manifest V3) che traccia gli episodi visti su AnimeSaturn, AnimeWorld e AnimeUnity, li sincronizza tra i tuoi dispositivi e aggiorna la lista MyAnimeList (API v2, OAuth2 PKCE).
 
 ## Installazione per sviluppo
 

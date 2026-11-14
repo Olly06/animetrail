@@ -21,8 +21,8 @@ La firma è automatica e arriva in pochi minuti. Lo installi una volta per brows
    ```json
    "browser_specific_settings": {
      "gecko": {
-       "id": "animesaturn-tracker@local.ext",
-       "update_url": "https://raw.githubusercontent.com/Olly06/estensioneAnimeSaturn/main/updates.json"
+       "id": "animetrail@local.ext",
+       "update_url": "https://raw.githubusercontent.com/Olly06/animetrail/main/updates.json"
      }
    }
    ```
@@ -30,11 +30,11 @@ La firma è automatica e arriva in pochi minuti. Lo installi una volta per brows
    ```json
    {
      "addons": {
-       "animesaturn-tracker@local.ext": {
+       "animetrail@local.ext": {
          "updates": [
            {
              "version": "1.0.0",
-             "update_link": "https://github.com/Olly06/estensioneAnimeSaturn/releases/download/v1.0.0/animesaturn-tracker-1.0.0.xpi"
+             "update_link": "https://github.com/Olly06/animetrail/releases/download/v1.0.0/animetrail-1.0.0.xpi"
            }
          ]
        }
