@@ -1,52 +1,96 @@
+<div align="center">
+
+<img src="src/icons/icon.svg" width="96" alt="AnimeTrail">
+
 # AnimeTrail
 
-Estensione per **Firefox e Chrome/Chromium** (Manifest V3) che traccia gli episodi visti su AnimeSaturn, AnimeWorld e AnimeUnity, li sincronizza tra i tuoi dispositivi e aggiorna la lista MyAnimeList (API v2, OAuth2 PKCE).
+**Ricorda dove sei arrivato con ogni anime e tieni aggiornata la tua lista MyAnimeList.**
 
-## Installazione per sviluppo
+Estensione per Firefox e Chrome (Manifest V3) · [Privacy](PRIVACY.md) · [Licenza MIT](LICENSE)
 
-**Firefox** (121+): `about:debugging` → *Questo Firefox* → *Carica componente aggiuntivo temporaneo…* → `src/manifest.json`.
+</div>
 
-**Chrome / Edge / Brave**: `chrome://extensions` → attiva *Modalità sviluppatore* → *Carica estensione non pacchettizzata* → seleziona la cartella `src/`.
+---
 
-## Configurazione MyAnimeList
-1. Crea un'app su https://myanimelist.net/apiconfig (App Type: **other**).
-2. In *App Redirect URL* inserisci **entrambi** gli URL (uno per riga), così la stessa app funziona su tutti e due i browser:
-   ```
-   <URL di Firefox, mostrato nelle Impostazioni del popup>
-   https://benghggecnglpgoelfmafldckmabgano.chromiumapp.org/        (Chrome, caricata da src/)
-   https://gecempaochilmgfdjcmefppkcefkoeip.chromiumapp.org/        (Chrome Web Store)
-   ```
-   Verifica che coincidano con quelli mostrati nel popup (Impostazioni → "Usa una tua app MAL").
-3. L'estensione include un Client ID integrato (`BUILTIN_CLIENT_ID` in `src/lib/common.js`):
-   per usarne uno tuo incollalo nello stesso punto del popup e fai Login.
+## Cosa fa
+
+- **Segna gli episodi visti da solo.** Dopo il tempo che scegli (20 secondi di default) sulla pagina del player, l'episodio viene registrato.
+- **"Continua"** nel popup e sulla pagina dell'anime: riapri l'ultimo episodio con un clic.
+- **Evidenzia gli episodi già visti** nelle liste dei siti.
+- **Aggiorna MyAnimeList** (episodi visti e stato *watching/completed*) con il login ufficiale MAL. È opzionale.
+- **Importa da MAL** gli anime già completati.
+- **Sincronizza** la lista tra i tuoi dispositivi con la sincronizzazione del browser.
+- **Etichette AS / AW / AU** che indicano su quale sito stavi guardando, e un'impostazione per scegliere il sito preferito per la ricerca.
+- **Backup:** esporta e importa tutto in un file JSON.
+
+## Siti supportati
+
+| Sito | Etichetta |
+|---|---|
+| AnimeSaturn | `AS` |
+| AnimeWorld | `AW` |
+| AnimeUnity | `AU` |
+
+AnimeTrail è un progetto indipendente e **non è affiliato** a MyAnimeList né a questi siti.
+
+## Installazione
+
+> Le versioni sugli store sono in revisione. Nel frattempo puoi caricare l'estensione a mano (vedi sotto).
+
+- **Firefox:** pagina su addons.mozilla.org *(link in arrivo)*
+- **Chrome / Edge / Brave:** pagina sul Chrome Web Store *(link in arrivo)*
+
+### Da sorgente (sviluppo)
+
+```bash
+git clone https://github.com/Olly06/animetrail.git
+```
+
+- **Firefox:** `about:debugging` → *Questo Firefox* → *Carica componente aggiuntivo temporaneo…* → seleziona `src/manifest.json`. Resta attiva fino al riavvio.
+- **Chrome / Edge / Brave:** `chrome://extensions` → attiva *Modalità sviluppatore* → *Carica estensione non pacchettizzata* → seleziona la cartella `src/`.
+
+## Primo avvio
+
+1. Guarda un episodio su uno dei siti supportati: dopo qualche secondo compare nel popup, scheda **In corso**.
+2. *(Facoltativo)* Apri **Impostazioni** → **Login con MAL** per sincronizzare la tua lista MyAnimeList. Non serve nessuna configurazione: usa il Client ID integrato.
 
 ## Sincronizzazione
-I dati usano `storage.sync`: si sincronizzano tra i Firefox (Firefox Sync, voce "Componenti aggiuntivi")
-oppure tra i Chrome (Chrome Sync, voce "Estensioni"). **Non** si sincronizzano tra Firefox e Chrome:
-per passare da uno all'altro usa Esporta/Importa JSON, oppure lascia che MAL faccia da riferimento comune.
 
-## Note tecniche sulla compatibilità
-- `src/lib/common.js` espone `chrome` come `browser` su Chromium (le API MV3 di Chrome restituiscono già Promise).
-- Il manifest dichiara sia `background.scripts` (usato da Firefox) sia `background.service_worker` (`src/background/sw.js`, usato da Chrome).
-- Il campo `key` del manifest fissa l'ID dell'estensione in Chrome, così il redirect URL è identico su ogni PC.
+I dati usano la sincronizzazione del browser: si allineano tra i Firefox (Firefox Sync) oppure tra i Chrome (Chrome Sync), **non** tra i due. Per passare da uno all'altro usa Esporta/Importa, oppure lascia che MyAnimeList faccia da riferimento comune.
 
-Per costruire i pacchetti: `./scripts/build.sh` (crea gli ZIP in `dist/`).
-Per installarla in modo permanente, firmarla e pubblicarla vedi [docs/DISTRIBUZIONE.md](docs/DISTRIBUZIONE.md).
-Informativa sulla privacy: [PRIVACY.md](PRIVACY.md). Idee future: [docs/TODO.md](docs/TODO.md).
+## Privacy
 
-## Struttura
+Nessun server dello sviluppatore, nessuna telemetria, nessuna pubblicità. I dati restano nel tuo browser; l'unico servizio esterno contattato è MyAnimeList, solo se fai il login. Dettagli in [PRIVACY.md](PRIVACY.md).
+
+## Per sviluppatori
 
 ```
-├── README.md  LICENSE  PRIVACY.md
-├── src/                 # l'estensione (è la cartella da caricare nei browser)
-│   ├── manifest.json
-│   ├── background/      # background.js (logica), sw.js (entry service worker Chrome)
-│   ├── content/         # content.js/css iniettati su AnimeSaturn, AnimeWorld, AnimeUnity
-│   ├── popup/           # popup.html/css/js (popup e pagina intera)
-│   ├── lib/             # common.js, mal_api.js (condivisi)
+├── src/              # l'estensione (la cartella da caricare nei browser)
+│   ├── background/   # logica, storage, scrobble su MAL (sw.js: entry per Chrome)
+│   ├── content/      # script iniettato nei siti: rileva episodi, evidenzia i visti
+│   ├── popup/        # popup e pagina intera
+│   ├── lib/          # common.js, mal_api.js
 │   └── icons/
-├── docs/                # DISTRIBUZIONE.md (firma e pubblicazione), TODO.md
-├── store/               # amo-metadata.json e screenshots/ per le schede degli store
-├── scripts/build.sh     # crea i pacchetti in dist/
-└── dist/                # pacchetti generati (ignorata da git)
+├── docs/             # guida alla pubblicazione, TODO
+├── store/            # testi e screenshot per le schede degli store
+├── scripts/build.sh  # crea i pacchetti in dist/
+└── dist/             # pacchetti generati (ignorata da git)
 ```
+
+**Pacchetti:** `./scripts/build.sh` crea in `dist/` lo ZIP per Firefox e quello per il Chrome Web Store.
+**Firma e pubblicazione:** vedi [docs/DISTRIBUZIONE.md](docs/DISTRIBUZIONE.md). **Idee future:** [docs/TODO.md](docs/TODO.md).
+
+<details>
+<summary>Note tecniche</summary>
+
+- Un solo manifest per entrambi i browser: dichiara `background.scripts` (Firefox) e `background.service_worker` (Chrome).
+- `src/lib/common.js` espone `chrome` come `browser` su Chromium.
+- Ogni anime è identificato da uno slug: `nome-id` (AnimeSaturn), `nome.id` (AnimeWorld), `id_nome` (AnimeUnity).
+- Il campo `key` del manifest fissa l'ID in Chrome per lo sviluppo; il build per lo store lo rimuove.
+- **Usare una propria app MAL:** registrala su <https://myanimelist.net/apiconfig> (tipo *other*), aggiungi come Redirect URL quello mostrato in Impostazioni → *Usa una tua app MAL*, e incolla il tuo Client ID nello stesso punto.
+
+</details>
+
+## Licenza
+
+[MIT](LICENSE)
