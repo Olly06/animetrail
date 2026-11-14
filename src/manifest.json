@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AnimeSaturn Tracker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Traccia gli episodi visti su AnimeSaturn, AnimeWorld e AnimeUnity, li sincronizza tra i tuoi dispositivi e aggiorna la tua lista MyAnimeList.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmV+DuGUIPcG0gw5XoB51VTqehpMmKgsUhzI8B0FO4+qm9rIMh2vXCM571Om53kRB0PBoDvmWxSC/El0fcoxfoFfBge5a1qX/5wp9pYobsN2OMgv3WpPuaQn0SSFuzVhp+XwY55KM4sW1CSIJLVXwuNxvCTB6g7DFyAyQHZ/M0V2F9HQZ2DX8iqv2+VBW0DT2WdqCZQL3ZpvlZ2SnnXqHY5lPfsHfQJ8LhgfKLibEtVPDFeUdVXCV3U5bw4r/gt3NKaT53PL8VvmUx9cTpA6n9pXb06IapV3pr610eligMBxNoKrZ3UeLRj4QXFtMHI9Yw0zpUm6eQJMWNkamEJ29vQIDAQAB",
   "browser_specific_settings": {
