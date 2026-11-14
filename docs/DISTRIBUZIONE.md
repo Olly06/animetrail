@@ -11,10 +11,11 @@ La firma è automatica e arriva in pochi minuti. Lo installi una volta per brows
 1. **Chiavi API**: generale su <https://addons.mozilla.org/developers/addon/api/key/> (serve un account Firefox).
 2. **Firma**, dalla radice del progetto (l'estensione vive in `src/`):
    ```bash
-   npx web-ext sign --source-dir=src --channel=unlisted \
+   npx web-ext sign --source-dir=src --channel=unlisted --artifacts-dir=dist \
      --api-key=TUA_JWT_ISSUER --api-secret=TUO_JWT_SECRET
    ```
-   Il file `.xpi` firmato finisce in `web-ext-artifacts/`.
+   Il file `.xpi` firmato finisce in `dist/`. Meglio passare le chiavi come variabili d'ambiente
+   (`WEB_EXT_API_KEY`, `WEB_EXT_API_SECRET`) per non lasciarle nella cronologia della shell.
 3. **Pubblicazione**: carica il `.xpi` in una **GitHub Release** di questo repository.
 4. **Installazione**: in ogni browser apri il link al `.xpi`; Firefox chiede di installarlo. Va fatto una sola volta.
 5. **Aggiornamenti automatici**: aggiungi `update_url` nel manifest, puntato a un file `updates.json` ospitato nel repo:
@@ -80,7 +81,26 @@ usando le chiavi API salvate nei **Secrets** del repository (`AMO_JWT_ISSUER`, `
    Come Redirect URL registra quello mostrato nelle Impostazioni dell'estensione (dipende dall'ID dell'add-on,
    quindi è uguale per tutti gli utenti). Senza questo valore ogni utente deve creare la propria app MAL.
 2. **Privacy policy**: usa `PRIVACY.md` (link: `https://github.com/Olly06/animetrail/blob/main/PRIVACY.md`).
-3. **Invio**: dal pannello sviluppatori AMO scegli *On this site*, oppure `npx web-ext sign --channel=listed`.
-   Carica `web-ext-artifacts/animetrail-<versione>-firefox.zip`, aggiungi descrizione, categoria e 2-3 screenshot.
+3. **Invio**: dal pannello sviluppatori AMO scegli *On this site*, oppure
+   `npx web-ext sign --source-dir=src --channel=listed --artifacts-dir=dist --amo-metadata=store/amo-metadata.json`.
+   Con il pannello carica `dist/animetrail-<versione>-firefox.zip`; i testi della scheda sono in `store/amo-metadata.json`
+   e gli screenshot in `store/screenshots/`.
 4. **Note per il revisore**: indica che l'estensione non ha server propri, che il login MAL è opzionale
    e fornisci istruzioni o un account di prova.
+
+## Costruire i pacchetti
+
+```bash
+./scripts/build.sh
+```
+Crea in `dist/`:
+- `animetrail-<versione>-firefox.zip`: da firmare o inviare ad AMO.
+- `animetrail-<versione>-chrome-store.zip`: senza il campo `key`, da caricare sul Chrome Web Store.
+
+Prima di ogni invio: aumenta `version` in `src/manifest.json` e controlla che la descrizione non superi
+i 132 caratteri (limite di Chrome; lo script lo segnala).
+
+## Chrome Web Store: Redirect URL
+
+L'ID assegnato dallo store è `gecempaochilmgfdjcmefppkcefkoeip`: sull'app MAL deve essere registrato
+`https://gecempaochilmgfdjcmefppkcefkoeip.chromiumapp.org/` (oltre agli URL di Firefox e di sviluppo).

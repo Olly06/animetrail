@@ -12,11 +12,13 @@ Estensione per **Firefox e Chrome/Chromium** (Manifest V3) che traccia gli episo
 1. Crea un'app su https://myanimelist.net/apiconfig (App Type: **other**).
 2. In *App Redirect URL* inserisci **entrambi** gli URL (uno per riga), così la stessa app funziona su tutti e due i browser:
    ```
-   https://03dd6cc1990859252bd1a412c9b8a9356d73d68d.extensions.allizom.org/
-   https://benghggecnglpgoelfmafldckmabgano.chromiumapp.org/
+   <URL di Firefox, mostrato nelle Impostazioni del popup>
+   https://benghggecnglpgoelfmafldckmabgano.chromiumapp.org/        (Chrome, caricata da src/)
+   https://gecempaochilmgfdjcmefppkcefkoeip.chromiumapp.org/        (Chrome Web Store)
    ```
-   Verifica che coincidano con quello mostrato nel popup (Impostazioni).
-3. Incolla il Client ID nel popup e fai Login.
+   Verifica che coincidano con quelli mostrati nel popup (Impostazioni → "Usa una tua app MAL").
+3. L'estensione include un Client ID integrato (`BUILTIN_CLIENT_ID` in `src/lib/common.js`):
+   per usarne uno tuo incollalo nello stesso punto del popup e fai Login.
 
 ## Sincronizzazione
 I dati usano `storage.sync`: si sincronizzano tra i Firefox (Firefox Sync, voce "Componenti aggiuntivi")
@@ -28,16 +30,23 @@ per passare da uno all'altro usa Esporta/Importa JSON, oppure lascia che MAL fac
 - Il manifest dichiara sia `background.scripts` (usato da Firefox) sia `background.service_worker` (`src/background/sw.js`, usato da Chrome).
 - Il campo `key` del manifest fissa l'ID dell'estensione in Chrome, così il redirect URL è identico su ogni PC.
 
-Per installarla in modo permanente su tutti i browser vedi [DISTRIBUZIONE.md](DISTRIBUZIONE.md).
+Per costruire i pacchetti: `./scripts/build.sh` (crea gli ZIP in `dist/`).
+Per installarla in modo permanente, firmarla e pubblicarla vedi [docs/DISTRIBUZIONE.md](docs/DISTRIBUZIONE.md).
+Informativa sulla privacy: [PRIVACY.md](PRIVACY.md). Idee future: [docs/TODO.md](docs/TODO.md).
 
 ## Struttura
 
 ```
-src/
-├── manifest.json
-├── background/   # background.js (logica), sw.js (entry service worker Chrome)
-├── content/      # content.js/css iniettati su AnimeSaturn
-├── popup/        # popup.html/css/js (popup e pagina intera)
-├── lib/          # common.js, mal_api.js (condivisi)
-└── icons/
+├── README.md  LICENSE  PRIVACY.md
+├── src/                 # l'estensione (è la cartella da caricare nei browser)
+│   ├── manifest.json
+│   ├── background/      # background.js (logica), sw.js (entry service worker Chrome)
+│   ├── content/         # content.js/css iniettati su AnimeSaturn, AnimeWorld, AnimeUnity
+│   ├── popup/           # popup.html/css/js (popup e pagina intera)
+│   ├── lib/             # common.js, mal_api.js (condivisi)
+│   └── icons/
+├── docs/                # DISTRIBUZIONE.md (firma e pubblicazione), TODO.md
+├── store/               # amo-metadata.json e screenshots/ per le schede degli store
+├── scripts/build.sh     # crea i pacchetti in dist/
+└── dist/                # pacchetti generati (ignorata da git)
 ```
