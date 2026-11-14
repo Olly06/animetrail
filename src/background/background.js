@@ -183,10 +183,39 @@ const stripTags = (s) => decodeEntities(s.replace(/<[^>]*>/g, ' ')).replace(/\s+
 
 /** Estrae mal_id/episodi totali/stato dalla pagina anime.
  * Usa regex e non DOMParser: il service worker di Chrome non ha DOM. */
-function parseAnimePage(html) {
+function parseAnimePage(html, site = 'saturn') {
   const meta = {};
   const mal = html.match(/href="https?:\/\/(?:www\.)?myanimelist\.net\/anime\/(\d+)/i);
   if (mal) meta.malId = Number(mal[1]);
+
+  if (site === 'unity') {
+    // <video-player anime="{&quot;mal_id&quot;:&quot;58059&quot;,&quot;episodes_count&quot;:12,&quot;status&quot;:&quot;Terminato&quot;,…}">
+    const attr = html.match(/<video-player\s[^>]*?\banime="([^"]*)"/i);
+    if (attr) {
+      try {
+        const a = JSON.parse(decodeEntities(attr[1]));
+        if (Number(a.mal_id) > 0) meta.malId = Number(a.mal_id);
+        if (Number(a.episodes_count) > 0) meta.total = Number(a.episodes_count);
+        meta.finished = /termin|finit|conclus|complet/i.test(String(a.status || ''));
+      } catch {
+        /* JSON non valido: nessun metadato */
+      }
+    }
+    const t = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+    if (t) meta.title = stripTags(t[1]);
+    return meta;
+  }
+
+  if (site === 'world') {
+    // <dt>Episodi:</dt> <dd>12</dd>  /  <dt>Stato:</dt> <dd><a ...>Finito</a></dd>
+    const n = html.match(/<dt>\s*Episodi:\s*<\/dt>\s*<dd>\s*(\d+)\s*</i);
+    if (n) meta.total = Number(n[1]);
+    const st = html.match(/<dt>\s*Stato:\s*<\/dt>\s*<dd>\s*(?:<a[^>]*>)?\s*([^<]+)/i);
+    if (st) meta.finished = /finit|conclus|completat/i.test(st[1]);
+    const t = html.match(/<h1[^>]*id="anime-title"[^>]*>([\s\S]*?)<\/h1>/i);
+    if (t) meta.title = stripTags(t[1]);
+    return meta;
+  }
 
   // <span ...>Episodi</span> <span ...>170</span>
   const eps = html.match(/>\s*Episodi\s*<\/span>\s*<span[^>]*>\s*(\d+)\s*</i);
@@ -202,10 +231,10 @@ function parseAnimePage(html) {
 }
 
 async function fetchAnimeMeta(slug) {
-  const { base } = await AST.getSettings();
-  const res = await fetch(AST.animeUrl(base, slug), { credentials: 'omit' });
-  if (!res.ok) throw new Error(`AnimeSaturn HTTP ${res.status}`);
-  return saveMeta(slug, parseAnimePage(await res.text()));
+  const settings = await AST.getSettings();
+  const res = await fetch(AST.animeUrl(settings, slug), { credentials: 'omit' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return saveMeta(slug, parseAnimePage(await res.text(), AST.siteOf(slug)));
 }
 
 /* ------------------------------------------------------------ voci importate da MAL
@@ -400,10 +429,12 @@ async function onEpisodeViewed(p, sender) {
     throw new Error('Payload episodio non valido');
   }
 
-  // Segue automaticamente i cambi di dominio di AnimeSaturn.
+  // Segue automaticamente i cambi di dominio dei siti.
   const origin = sender && sender.url ? new URL(sender.url).origin : '';
   const settings = await AST.getSettings();
-  if (origin && origin !== settings.base) await setSettings({ base: origin });
+  const baseKey = AST.baseKey(slug);
+  if (origin && origin !== settings[baseKey]) await setSettings({ [baseKey]: origin });
+  const token = /^[\w-]{1,24}$/.test(String(p.token || '')) ? String(p.token) : '';
 
   const meta = (await getLocal(LOCAL.META))[slug];
   const entry = await serial(async () => {
@@ -419,6 +450,8 @@ async function onEpisodeViewed(p, sender) {
       n: prev.n || (meta && meta.finished && meta.total) || 0,
       c: AST.compactCover(p.cover) || prev.c || '',
     };
+    if (token) next.u = token;
+    else if (prev.u && AST.siteOf(slug) !== 'saturn') next.u = prev.u;
     await putEntry(slug, next);
     return absorbPlaceholder(slug, next);
   });
@@ -459,7 +492,7 @@ async function exportData() {
     format: 'animesaturn-tracker',
     version: 1,
     exportedAt: new Date().toISOString(),
-    settings: { scrobble: settings.scrobble, minWatchSec: settings.minWatchSec, clientId: settings.clientId, base: settings.base },
+    settings: { scrobble: settings.scrobble, minWatchSec: settings.minWatchSec, clientId: settings.clientId, base: settings.base, searchSite: settings.searchSite },
     anime: await getAllEntries(),
   };
 }
@@ -475,6 +508,7 @@ function sanitizeEntry(v) {
     m: Math.max(0, parseInt(v.m, 10) || 0),
     n: Math.max(0, parseInt(v.n, 10) || 0),
     c: typeof v.c === 'string' ? v.c.slice(0, 300) : '',
+    ...(typeof v.u === 'string' && /^[\w-]{1,24}$/.test(v.u) ? { u: v.u } : {}),
   };
 }
 
@@ -510,6 +544,7 @@ async function importData(data) {
       if (typeof s.scrobble === 'boolean') patch.scrobble = s.scrobble;
       if (Number.isFinite(s.minWatchSec)) patch.minWatchSec = Math.min(600, Math.max(0, s.minWatchSec));
       if (typeof s.clientId === 'string' && s.clientId) patch.clientId = s.clientId.trim();
+      if (AST.SEARCH_SITE_NAMES[s.searchSite]) patch.searchSite = s.searchSite;
       await setSettings(patch);
     }
   });
@@ -548,6 +583,7 @@ const handlers = {
     if (typeof p.scrobble === 'boolean') patch.scrobble = p.scrobble;
     if (p.minWatchSec !== undefined) patch.minWatchSec = Math.min(600, Math.max(0, parseInt(p.minWatchSec, 10) || 0));
     if (typeof p.clientId === 'string') patch.clientId = p.clientId.trim();
+    if (AST.SEARCH_SITE_NAMES[p.searchSite]) patch.searchSite = p.searchSite;
     const s = await setSettings(patch);
     if (patch.scrobble === true) retryPending({ all: true });
     return s;

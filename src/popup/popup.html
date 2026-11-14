@@ -35,7 +35,7 @@
       <ul id="ongoing-list" class="list"></ul>
       <button id="ongoing-all" class="btn small see-all" hidden></button>
       <p id="ongoing-empty" class="empty" hidden>
-        Nessun anime in corso.<br>Guarda un episodio su AnimeSaturn per iniziare.
+        Nessun anime in corso.<br>Guarda un episodio su AnimeSaturn, AnimeWorld o AnimeUnity per iniziare.
       </p>
     </section>
 
@@ -91,6 +91,17 @@
           </span>
           <input id="min-sec" type="number" min="0" max="600" step="5" class="num">
         </label>
+        <label class="toggle-row">
+          <span>
+            Sito per la ricerca
+            <small class="muted">Dove cercare gli anime importati da MAL</small>
+          </span>
+          <select id="search-site" class="num">
+            <option value="saturn">AnimeSaturn</option>
+            <option value="world">AnimeWorld</option>
+            <option value="unity">AnimeUnity</option>
+          </select>
+        </label>
         <button id="retry-all" class="btn small">Riprova sincronizzazioni in sospeso</button>
       </div>
 
@@ -120,6 +131,7 @@
       <div class="info">
         <div class="title"></div>
         <div class="meta">
+          <span class="site"></span>
           <span class="progress-text"></span>
           <span class="sync" title=""></span>
         </div>

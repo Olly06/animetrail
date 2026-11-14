@@ -10,11 +10,17 @@
  *       d: 1730800000,                    // ultima visione (epoch in SECONDI)
  *       m: 34572,                         // mal_id (0 = non associato)
  *       n: 12,                            // episodi totali (0 = sconosciuto/in corso)
- *       c: "/static/images/copertine/x.jpg" // cover (path relativo a img.saturncdn.net)
+ *       c: "/static/images/copertine/x.jpg", // cover (path relativo a img.saturncdn.net, o URL https completo)
+ *       u: "FomE9IQTkU"                   // solo AnimeWorld/AnimeUnity: token/id URL dell'ultimo episodio visto
  *   }
  * Lo slug di AnimeSaturn (es. "black-clover-67Dip") è univoco e stabile: è la chiave.
- * Gli URL vengono ricostruiti da `settings.base`, così un cambio di dominio del sito
- * non invalida lo storico.
+ * Gli slug di AnimeWorld hanno la forma "<nome>.<id>" (es. "black-clover-2.tYyeV"):
+ * il punto li distingue da quelli di AnimeSaturn. Gli episodi AnimeWorld hanno un
+ * URL opaco (/play/<slug>/<token>), per questo si memorizza il token `u`.
+ * Gli slug di AnimeUnity hanno la forma "<id>_<nome>" (es. "7882_wistoria-wand-and-sword-ita",
+ * l'URL è /anime/<id>-<nome>); l'episodio ha un id numerico, anch'esso salvato in `u`.
+ * Gli URL vengono ricostruiti da `settings.base` / `baseWorld` / `baseUnity`, così un cambio
+ * di dominio del sito non invalida lo storico.
  */
 'use strict';
 
@@ -36,6 +42,9 @@ const AST = (() => {
     minWatchSec: 20,      // secondi di permanenza sulla pagina prima di contare l'episodio
     clientId: '',         // Client ID dell'app registrata su MAL
     base: 'https://www.animesaturn.net',
+    baseWorld: 'https://www.animeworld.ac',
+    baseUnity: 'https://www.animeunity.co',
+    searchSite: 'saturn', // sito preferito per cercare gli anime: 'saturn' | 'world' | 'unity'
   });
 
   /** [1,2,3,5,7,8] -> "1-3,5,7-8" */
@@ -78,12 +87,27 @@ const AST = (() => {
 
   const entryKey = (slug) => ENTRY_PREFIX + slug;
 
+  /** Slug AnimeWorld ("nome.id") vs AnimeSaturn ("nome-id", senza punti). */
+  const isWorld = (slug) => String(slug).includes('.');
+  const isUnity = (slug) => /^\d+_/.test(slug);
+  /** 'saturn' | 'world' | 'unity' (i segnaposto "mal-N" risultano 'saturn', ma non hanno sito). */
+  const siteOf = (slug) => (isWorld(slug) ? 'world' : isUnity(slug) ? 'unity' : 'saturn');
+  const BASE_KEYS = Object.freeze({ saturn: 'base', world: 'baseWorld', unity: 'baseUnity' });
+  const baseKey = (slug) => BASE_KEYS[siteOf(slug)];
+  const siteBase = (settings, slug) => trimBase(settings[baseKey(slug)] || DEFAULT_SETTINGS[baseKey(slug)]);
+  /** "7882_nome" -> "7882-nome" (percorso AnimeUnity). */
+  const unityPath = (slug) => slug.replace('_', '-');
+
   function trimBase(base) {
     return String(base || DEFAULT_SETTINGS.base).replace(/\/+$/, '');
   }
 
-  function episodeUrl(base, slug, ep) {
-    return `${trimBase(base)}/anime/${encodeURIComponent(slug)}/ep-${ep}`;
+  /** `token` serve solo ad AnimeWorld; senza token si apre la pagina dell'anime. */
+  function episodeUrl(settings, slug, ep, token = '') {
+    const site = siteOf(slug);
+    if (site === 'saturn') return `${siteBase(settings, slug)}/anime/${encodeURIComponent(slug)}/ep-${ep}`;
+    const base = animeUrl(settings, slug);
+    return token ? `${base}/${encodeURIComponent(token)}` : base;
   }
 
   /** Versione corta del titolo per la ricerca: senza sottotitolo, stagione/parte e rumore. */
@@ -100,12 +124,26 @@ const AST = (() => {
     return t || String(title || '').trim();
   }
 
-  function searchUrl(base, title, short = false) {
-    return `${trimBase(base)}/filter?key=${encodeURIComponent(short ? shortTitle(title) : title)}`;
+  const SITE_LABELS = Object.freeze({ saturn: 'AS', world: 'AW', unity: 'AU' });
+  const siteLabel = (slug) => SITE_LABELS[siteOf(slug)];
+  const SEARCH_SITE_NAMES = Object.freeze({ saturn: 'AnimeSaturn', world: 'AnimeWorld', unity: 'AnimeUnity' });
+
+  /** Ricerca per titolo sul sito preferito (`settings.searchSite`). */
+  function searchUrl(settings, title, short = false) {
+    const q = encodeURIComponent(short ? shortTitle(title) : title);
+    const site = SEARCH_SITE_NAMES[settings.searchSite] ? settings.searchSite : 'saturn';
+    const base = trimBase(settings[BASE_KEYS[site]] || DEFAULT_SETTINGS[BASE_KEYS[site]]);
+    if (site === 'world') return `${base}/search?keyword=${q}`;
+    if (site === 'unity') return `${base}/archivio?title=${q}`;
+    return `${base}/filter?key=${q}`;
   }
 
-  function animeUrl(base, slug) {
-    return `${trimBase(base)}/anime/${encodeURIComponent(slug)}`;
+  function animeUrl(settings, slug) {
+    const base = siteBase(settings, slug);
+    const site = siteOf(slug);
+    if (site === 'world') return `${base}/play/${encodeURIComponent(slug)}`;
+    if (site === 'unity') return `${base}/anime/${encodeURIComponent(unityPath(slug))}`;
+    return `${base}/anime/${encodeURIComponent(slug)}`;
   }
 
   /** Comprime l'URL della cover per risparmiare quota sync. */
@@ -134,6 +172,15 @@ const AST = (() => {
     maxWatched,
     isCompleted,
     entryKey,
+    isWorld,
+    isUnity,
+    unityPath,
+    siteOf,
+    baseKey,
+    BASE_KEYS,
+    siteLabel,
+    SEARCH_SITE_NAMES,
+    siteBase,
     placeholderSlug,
     isPlaceholder,
     episodeUrl,

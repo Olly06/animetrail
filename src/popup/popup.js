@@ -59,24 +59,25 @@ function parseMalInput(value) {
   return m ? Number(m[1]) : 0;
 }
 
-/** Apre un URL riusando la scheda attiva se è già su AnimeSaturn. */
+/** Apre un URL riusando la scheda attiva se è già su AnimeSaturn/AnimeWorld. */
 async function openUrl(url) {
   if (IS_PAGE) {
     await browser.tabs.create({ url });
     return;
   }
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  const base = state ? state.settings.base : '';
-  if (tab && tab.url && base && tab.url.startsWith(base)) await browser.tabs.update(tab.id, { url });
+  const bases = state ? [state.settings.base, state.settings.baseWorld, state.settings.baseUnity].filter(Boolean) : [];
+  if (tab && tab.url && bases.some((b) => tab.url.startsWith(b))) await browser.tabs.update(tab.id, { url });
   else await browser.tabs.create({ url });
   window.close();
 }
 
 function openEpisode(slug, ep, title = '', short = false) {
-  // Anime importato da MAL: nessuno slug AnimeSaturn, si apre la ricerca per titolo
+  // Anime importato da MAL: nessuno slug, si apre la ricerca per titolo sul sito preferito
   // (Shift+clic = titolo abbreviato).
-  if (AST.isPlaceholder(slug)) return openUrl(AST.searchUrl(state.settings.base, title, short));
-  return openUrl(AST.episodeUrl(state.settings.base, slug, ep));
+  if (AST.isPlaceholder(slug)) return openUrl(AST.searchUrl(state.settings, title, short));
+  const entry = state.entries[slug];
+  return openUrl(AST.episodeUrl(state.settings, slug, ep, entry && entry.u));
 }
 
 /* ---------------------------------------------------------- rendering voci */
@@ -118,6 +119,15 @@ function buildItem(slug, entry, mode) {
   title.textContent = entry.t || slug;
   title.title = entry.t || slug;
 
+  const site = tpl.querySelector('.site');
+  if (AST.isPlaceholder(slug)) site.remove();
+  else {
+    site.textContent = AST.siteLabel(slug);
+    const siteId = AST.siteOf(slug);
+    site.classList.add(AST.siteLabel(slug).toLowerCase());
+    site.title = `Guardato su ${AST.SEARCH_SITE_NAMES[siteId]}`;
+  }
+
   tpl.querySelector('.progress-text').textContent = `Ep ${entry.e}${n ? `/${n}` : ''}`;
 
   const sync = tpl.querySelector('.sync');
@@ -145,7 +155,7 @@ function buildItem(slug, entry, mode) {
     el('button', {
       class: 'icon-btn play',
       title: AST.isPlaceholder(slug)
-        ? `Cerca su AnimeSaturn (Shift: "${AST.shortTitle(entry.t)}")`
+        ? `Cerca su ${AST.SEARCH_SITE_NAMES[state.settings.searchSite] || 'AnimeSaturn'} (Shift: "${AST.shortTitle(entry.t)}")`
         : `Riprendi episodio ${entry.e}`,
       text: '▶',
       onclick: (ev) => openEpisode(slug, entry.e, entry.t, ev.shiftKey),
@@ -285,6 +295,7 @@ function renderSettings() {
   if (document.activeElement !== clientInput) clientInput.value = settings.clientId || '';
   $('#redirect-url').value = redirectUrl;
   $('#scrobble-toggle').checked = !!settings.scrobble;
+  $('#search-site').value = AST.SEARCH_SITE_NAMES[settings.searchSite] ? settings.searchSite : 'saturn';
   const minSec = $('#min-sec');
   if (document.activeElement !== minSec) minSec.value = settings.minWatchSec;
 
@@ -400,6 +411,11 @@ function bindEvents() {
   $('#scrobble-toggle').addEventListener('change', async (e) => {
     await send('setSettings', { patch: { scrobble: e.target.checked } });
     toast(e.target.checked ? 'Auto-scrobble attivo' : 'Auto-scrobble disattivato');
+  });
+
+  $('#search-site').addEventListener('change', async (e) => {
+    await send('setSettings', { patch: { searchSite: e.target.value } });
+    toast('Salvato');
   });
 
   $('#min-sec').addEventListener('change', async (e) => {
